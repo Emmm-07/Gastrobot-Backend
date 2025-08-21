@@ -383,9 +383,9 @@ int readVoltValue() {
     double voltage = value * (3.3 / 4095.0);
     message+="Measured Voltage before factor: " + String(voltage);
 
-
-    voltage = voltage/2.18;
-    int volt_percent = (int)(voltage * 100);
+    float high = 2.11;
+    float low = 1.7391;
+    int volt_percent = (int)(((voltage - low) / (high - low)) * 100);
     // If using a voltage divider, calculate the original input voltage.
     // Assuming a 33kΩ and 4.7kΩ divider:
     double inputVoltage = voltage * ((33.0 + 4.7) / 4.7);
@@ -423,12 +423,12 @@ int readGasValue(){
      delay(10); 
   }
   // get smoothed value from the dataset:
-  
+  float calibFactor = 76.5 / 185.0; // calibration factor based on weighing scale, 76.5 g 
   float i = LoadCell.getData();
-  String message = "Load_cell output val original: " + String(i);
+  // String message = "Load_cell output val original: " + String(i);
 
   i=(i*-1) - 5.5;       //5.5 can be changed for calibration
-  message+="\nLoad_cell output val calibrated: " + String(i);
+  // message+="\nLoad_cell output val calibrated: " + String(i);
   
 
   // check if last tare operation is complete:
@@ -436,12 +436,12 @@ int readGasValue(){
   //   setLogMessage("Tare complete");
   // }
   i = abs(initialWeight - i);
-  message+="\nFinal Output: " + String(i);
+  i *= calibFactor; 
+  String message = "\nWeight Final Output: " + String(i) + "\n";
 
   setLogMessage(message);
- 
-  if(i<100 ){
-     servoSpray.write(0);    //Edited /Changed /Added
+  float threshold = 105.0; 
+  if(i<threshold ){
     return true;
   }else{
     return false;
@@ -474,7 +474,7 @@ int readGasValue(){
       // Serial.println("Distance (calibrated): "+ String(distance_cm-9));
       // Serial.println("Distance (cm): "+ String(distance_cm));
 
-      if (distance_cm <= 31){
+      if (distance_cm <= 50){
             stopBot();                    // Edited / Chaneg / Added
           return true;
       }else{
@@ -500,7 +500,7 @@ int readGasValue(){
       // Print the result to the serial monitor
       setLogMessage("Front Distance (cm): "+ String(distance_cm));
 
-      if (distance_cm <= 31){
+      if (distance_cm <= 50){
             stopBot();                    // Edited / Chaneg / Added
           return true;
       }else{
